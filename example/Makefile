@@ -17,6 +17,7 @@ $(KUBECTL):
 run: $(SERVER_CERT_FILES)
 	$(MAKE) start-lvmd
 	$(MAKE) launch-kind
+	kubectl label node kind-worker rack=1
 	$(KUBECTL) apply -k .
 	$(KUBECTL) wait --for=condition=available --timeout=60s -n topolvm-system deployments/controller
 	$(KUBECTL) apply -f podpvc.yaml

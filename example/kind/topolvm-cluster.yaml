@@ -10,6 +10,9 @@ kubeadmConfigPatches:
   kubernetesVersion: "v@KUBERNETES_VERSION@"
   networking:
     serviceSubnet: 10.0.0.0/16
+  apiServer:
+    extraArgs:
+      "feature-gates": "EvenPodsSpread=true"
   scheduler:
     extraVolumes:
       - name: "config"
@@ -18,6 +21,7 @@ kubeadmConfigPatches:
         readOnly: true
     extraArgs:
       config: /var/lib/scheduler/scheduler-config.yaml
+      "feature-gates": "EvenPodsSpread=true"
 nodes:
 - role: control-plane
   extraMounts:
