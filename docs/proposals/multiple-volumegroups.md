@@ -70,14 +70,14 @@ logical volume.
 
 ### How to expose free storage capacity of nodes
 
-Currently `topolvm-node` exposes free storage capacity as `topolvm.cybozu.com/capacity` annotation of each Node as follows:
+Currently `topolvm-node` exposes free storage capacity as `capacity.topolvm.io/<volume group name>` annotation of each Node as follows:
 
 ```yaml
 kind: Node
 metdta:
   name: wroker-1
   annotations:
-    topolvm.cybozu.com/capacity: "1073741824"
+    capacity.topolvm.io/myvg1: "1073741824"
 ```
 
 This proposal will change annotation to `capacity.topolvm.io/<volume group>` as follows 
@@ -95,7 +95,7 @@ metdta:
 
 ### How to annotate resources
 
-Currently, the mutating webhook inserts `topolvm.cybozu.com/capacity` to the first container as follows:
+Currently, the mutating webhook inserts `capacity.topolvm.io/<volume group name>` to the first container as follows:
 
 ```yaml
 spec:
@@ -103,9 +103,9 @@ spec:
   - name: testhttpd
     resources:
       limits:
-        topolvm.cybozu.com/capacity: "1073741824"
+        capacity.topolvm.io/myvg1: "1073741824"
       requests:
-        topolvm.cybozu.com/capacity: "1073741824"
+        capacity.topolvm.io/myvg1: "1073741824"
 ```
 
 Then, `topolvm-scheduler` need to be configured in scheduler policy as follows:
@@ -119,7 +119,7 @@ Then, `topolvm-scheduler` need to be configured in scheduler policy as follows:
         "prioritizeVerb": "prioritize",
         "managedResources":
         [{
-          "name": "topolvm.cybozu.com/capacity",
+          "name": "capacity.topolvm.io/myvg1",
           "ignoredByScheduler": true
         }],
         "nodeCacheCapable": false
@@ -261,9 +261,11 @@ metaadta:
   namespace: topolvm-system
 data:
   default-vg: myvg1
-  divisors:
-    myvg1: 1
-    myvg2: 10
+  scheduler.yaml: |
+    default-divisor: 10
+    divisors:
+      myvg1: 1
+      myvg2: 10
 ```
 
 ### Ephemeral Volume
