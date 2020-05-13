@@ -183,10 +183,10 @@ This proposal would calculate the score of each volume group by the above formul
 and users can specify dedicated `divisor` parameter for each volume group.
 
 Pros:
-- Can calculate the score correctly by `divisor` parameters for each volume group
+- The weight of extender can be adjusted for each volume group.
 
 Cons:
-- Requires to modify the scheduler policy depending on volume groups
+- The settings of scheduler policy are complicated and must be rewritten according to your environment.
 
 #### 2) insert multiple annotations
 
@@ -220,15 +220,17 @@ This proposal would calculate the score of each volume group by the above formul
 and use the average of them as the final score.
 
 Pros:
-- No need to modify the scheduler policy depending on volume groups
+- The settings of scheduler policy is simple.
+- For pods that use only one volume group, scheduling can be done as usual.
+- For pods that use two or more volume group, scheduling to a node with insufficient capacity can be avoided.
 
 Cons:
-- Cannot calculate the score by specifying weight for each volume group
+- The weight of extender cannot be adjusted individually when using two or more volume group.
 
 #### Decision outcome
 
-Choose options: [1) insert multiple resources](#1-insert-multiple-resources),
-because we want to calculate the score correctly by `divisor` parameters for each volume group.
+Choose options: [2) insert multiple annotations](#2-insert-multiple-annotations),
+because option 1) is complicated to set scheduler policy. In most cases, option 2 works without problems.
 
 ### The default volume group
 
