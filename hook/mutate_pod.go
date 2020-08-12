@@ -20,7 +20,7 @@ import (
 
 var pmLogger = logf.Log.WithName("pod-mutator")
 
-// +kubebuilder:webhook:path=/pod/mutate,mutating=true,failurePolicy=fail,matchPolicy=equivalent,groups="",resources=pods,verbs=create,versions=v1,name=pod-hook.topolvm.cybozu.com
+// +kubebuilder:webhook:path=/pod/mutate,mutating=true,failurePolicy=fail,matchPolicy=equivalent,groups="",resources=pods,verbs=create,versions=v1,name=pod-hook.topolvm.io
 // +kubebuilder:rbac:groups="",resources=persistentvolumeclaims,verbs=get;list;watch
 // +kubebuilder:rbac:groups=storage.k8s.io,resources=storageclasses,verbs=get;list;watch
 
@@ -156,7 +156,14 @@ func (m podMutator) requestedPVCCapacity(ctx context.Context, pod *corev1.Pod, t
 			}
 			// Pods should be created even if their PVCs do not exist yet.
 			// TopoLVM does not care about such pods after they are created, though.
-			continue
+			// controller-runtime client returns cached data and might be stale and
+			// return 'not found'. Let the high-level controller retry pod creation.
+			pmLogger.Error(err, "failed to get pvc",
+				"pod", pod.Name,
+				"namespace", pod.Namespace,
+				"pvc", pvcName,
+			)
+			return nil, err
 		}
 
 		if pvc.Spec.StorageClassName == nil {

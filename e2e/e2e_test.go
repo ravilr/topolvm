@@ -714,13 +714,13 @@ spec:
   volumes:
   - name: my-volume
     csi:
-      driver: topolvm.cybozu.com
+      driver: topolvm.io
       fsType: xfs
       volumeAttributes:
-        topolvm.cybozu.com/size: "2"
+        topolvm.io/size: "2"
   - name: my-default-volume
     csi:
-      driver: topolvm.cybozu.com
+      driver: topolvm.io
 `
 		currentK8sVersion := getCurrentK8sMinorVersion()
 		if currentK8sVersion < 16 {
