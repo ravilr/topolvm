@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"strconv"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/topolvm/topolvm"
@@ -137,6 +138,7 @@ func (m *metricsExporter) updateNode(ctx context.Context, wc proto.VGService_Wat
 		for _, item := range res.Items {
 			node2.Annotations[topolvm.CapacityKeyPrefix+item.DeviceClass] = strconv.FormatUint(item.FreeBytes, 10)
 		}
+		node2.Annotations[topolvm.NodeHeartbeatKey] = strconv.FormatInt(time.Now().Unix(), 10)
 		if err := m.Patch(ctx, node2, client.MergeFrom(&node)); err != nil {
 			return err
 		}

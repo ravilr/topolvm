@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"context"
+	"strconv"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/topolvm/topolvm"
@@ -14,6 +16,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
+
+const gracePeriod = 200 * time.Second
 
 // NodeReconciler reconciles a Node object
 type NodeReconciler struct {
@@ -42,6 +46,18 @@ func (r *NodeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if node.DeletionTimestamp == nil {
+		probeTimestamp := time.Now()
+		t, ok := node.Annotations[topolvm.NodeHeartbeatKey]
+		if ok {
+			ts, err := strconv.ParseInt(t, 10, 64)
+			if err == nil {
+				probeTimestamp = time.Unix(ts, 0)
+			}
+		}
+		if node.Spec.Unschedulable || time.Now().After(probeTimestamp.Add(gracePeriod)) {
+			log.Info("node marked unschedulable or stale", "name", node.Name)
+			return r.rescheduleProvisioning(ctx, log, node)
+		}
 		return ctrl.Result{}, nil
 	}
 
@@ -125,6 +141,46 @@ func (r *NodeReconciler) doFinalize(ctx context.Context, log logr.Logger, node *
 		log.Info("deleted PVC", "name", pvc.Name, "namespace", pvc.Namespace)
 	}
 
+	return ctrl.Result{}, nil
+}
+
+// rescheduleProvisioning signal back to the scheduler to retry dynamic provisioning
+// by removing the annSelectedNode annotation
+func (r *NodeReconciler) rescheduleProvisioning(ctx context.Context, log logr.Logger, node *corev1.Node) (ctrl.Result, error) {
+	scs, err := r.targetStorageClasses(ctx)
+	if err != nil {
+		log.Error(err, "unable to fetch StorageClass")
+		return ctrl.Result{}, err
+	}
+
+	var pvcs corev1.PersistentVolumeClaimList
+	err = r.List(ctx, &pvcs, client.MatchingFields{KeySelectedNode: node.Name})
+	if err != nil {
+		log.Error(err, "unable to fetch PersistentVolumeClaimList")
+		return ctrl.Result{}, err
+	}
+
+	for _, pvc := range pvcs.Items {
+		if pvc.Spec.StorageClassName == nil {
+			continue
+		}
+		if !scs[*pvc.Spec.StorageClassName] {
+			continue
+		}
+		if pvc.Spec.VolumeName == "" && pvc.Status.Phase == corev1.ClaimPending {
+			if _, ok := pvc.Annotations[AnnSelectedNode]; !ok {
+				// Provisioning not triggered by the scheduler, skip
+				continue
+			}
+			newPVC := pvc.DeepCopy()
+			delete(newPVC.Annotations, AnnSelectedNode)
+			if err := r.Update(ctx, newPVC); err != nil {
+				log.Error(err, "failed to clear pvc selected-node annotation", "name", newPVC.Name, "namespace", newPVC.Namespace)
+				return ctrl.Result{}, err
+			}
+			log.Info("cleaned selected-node annotation from PVC", "name", newPVC.Name, "namespace", newPVC.Namespace)
+		}
+	}
 	return ctrl.Result{}, nil
 }
 

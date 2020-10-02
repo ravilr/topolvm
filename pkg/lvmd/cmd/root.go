@@ -113,7 +113,7 @@ func subMain() error {
 		return nil
 	})
 	well.Go(func(ctx context.Context) error {
-		ticker := time.NewTicker(10 * time.Minute)
+		ticker := time.NewTicker(1 * time.Minute)
 		for {
 			select {
 			case <-ctx.Done():

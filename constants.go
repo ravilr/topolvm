@@ -50,3 +50,6 @@ const DefaultSizeGb = 1
 
 // DefaultSize is DefaultSizeGb in bytes
 const DefaultSize = DefaultSizeGb << 30
+
+// NodeHeartbeatKey is the node annotation representing the node probe timestamp
+const NodeHeartbeatKey = "topolvm.io/node-probe-timestamp"
