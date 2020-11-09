@@ -732,13 +732,13 @@ spec:
   volumes:
   - name: my-volume
     csi:
-      driver: topolvm.cybozu.com
+      driver: topolvm.io
       fsType: xfs
       volumeAttributes:
-        topolvm.cybozu.com/size: "2"
+        topolvm.io/size: "2"
   - name: my-default-volume
     csi:
-      driver: topolvm.cybozu.com
+      driver: topolvm.io
 `
 		By("reading current count of LVMs")
 		baseLvmCount, err := countLVMs()

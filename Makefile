@@ -73,7 +73,7 @@ manifests:
 		paths="./api/...;./controllers;./hook;./driver/k8s" \
 		output:crd:artifacts:config=config/crd/bases
 	rm -f deploy/manifests/base/crd.yaml
-	cp config/crd/bases/topolvm.cybozu.com_logicalvolumes.yaml deploy/manifests/base/crd.yaml
+	cp config/crd/bases/topolvm.io_logicalvolumes.yaml deploy/manifests/base/crd.yaml
 
 .PHONY: generate
 generate: $(PROTOBUF_GEN)

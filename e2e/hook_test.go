@@ -236,16 +236,16 @@ spec:
   volumes:
       - name: my-ephemeral-volume1
         csi:
-          driver: topolvm.cybozu.com
+          driver: topolvm.io
           fsType: xfs
           volumeAttributes:
-            topolvm.cybozu.com/size: "2"
+            topolvm.io/size: "2"
       - name: my-ephemeral-volume2
         csi:
-          driver: topolvm.cybozu.com
+          driver: topolvm.io
           fsType: xfs
           volumeAttributes:
-            topolvm.cybozu.com/size: "1"
+            topolvm.io/size: "1"
       - name: my-pvc-volume1
         persistentVolumeClaim:
           claimName: local-pvc1
@@ -253,7 +253,7 @@ spec:
 		stdout, stderr, err := kubectlWithInput([]byte(yml), "-n", nsHookTest, "apply", "-f", "-")
 		Expect(err).ShouldNot(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
 
-		By("checking pod is annotated with topolvm.cybozu.com/capacity")
+		By("checking pod is annotated with topolvm.io/capacity")
 		Eventually(func() error {
 			result, stderr, err := kubectl("get", "-n", nsHookTest, "pods/testhttpd", "-o=json")
 			if err != nil {

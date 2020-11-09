@@ -37,7 +37,7 @@ var (
 	logger = ctrl.Log.WithName("LogicalVolume")
 )
 
-// +kubebuilder:rbac:groups=topolvm.cybozu.com,resources=logicalvolumes,verbs=get;list;watch;create;delete
+// +kubebuilder:rbac:groups=topolvm.io,resources=logicalvolumes,verbs=get;list;watch;create;delete
 // +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
 
 // NewLogicalVolumeService returns LogicalVolumeService.
@@ -63,7 +63,7 @@ func (s *LogicalVolumeService) CreateVolume(ctx context.Context, node, dc, name 
 	lv := &topolvmv1.LogicalVolume{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "LogicalVolume",
-			APIVersion: "topolvm.cybozu.com/v1",
+			APIVersion: "topolvm.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,

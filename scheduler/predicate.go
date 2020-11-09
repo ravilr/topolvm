@@ -6,10 +6,13 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/topolvm/topolvm"
 	corev1 "k8s.io/api/core/v1"
 )
+
+const gracePeriod = 200 * time.Second
 
 func filterNodes(nodes corev1.NodeList, requested map[string]int64) ExtenderFilterResult {
 	if len(requested) == 0 {
@@ -56,6 +59,17 @@ func filterNode(node corev1.Node, requested map[string]int64) string {
 		}
 		if capacity < uint64(required) {
 			return "out of VG free space"
+		}
+		t, ok := node.Annotations[topolvm.NodeHeartbeatKey]
+		if !ok {
+			return "no topolvm node probe timestamp"
+		}
+		ts, err := strconv.ParseInt(t, 10, 64)
+		if err != nil {
+			return "bad topolvm node probe timestamp annotation: " + t
+		}
+		if time.Now().After(time.Unix(ts, 0).Add(gracePeriod)) {
+			return "topolvm node probe timestamp was last set longer ago than 3 minutes: t"
 		}
 	}
 	return ""
